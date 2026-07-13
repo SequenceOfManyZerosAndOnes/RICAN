@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+message: "If you use RICAN in your research, please cite it using this metadata."
+title: "RICAN: A Fixed-Rate Representation Method for Finite Alphabets via Continued-Fraction Approximation"
+authors:
+  - family-names: "Martínez Palomo"
+    given-names: "J. Jesús"
+    email: "jesus@research.com"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+    affiliation: "Independent Researcher"
+date-released: 2026-07-01
+version: 1.0.0
+doi: 10.xxxx/xxxxx
+license: MIT
+repository-code: "https://github.com/username/RICAN"
+url: "https://github.com/username/RICAN"
+abstract: "This paper presents a general methodology for constructing asymptotically efficient fixed-length binary representations for sequences over finite alphabets. The core contribution is a systematic method, based on Diophantine approximation via continued fractions, for selecting block sizes that achieve near-minimal representation overhead for any alphabet size B. For the decimal case (B = 10), the convergent 2136/643 yields K = 643 decimal digits per block, represented in exactly 267 bytes (2136 bits), with a per-symbol ceiling redundancy of 3.65 × 10⁻⁷ bits. Unlike statistical compression methods, this approach does not exploit source redundancy. It provides a deterministic, reversible mapping whose output size depends only on the input length and alphabet size, not on statistical properties."
+keywords:
+  - information theory
+  - source coding
+  - fixed-rate coding
+  - continued fractions
+  - Diophantine approximation
+  - decimal representation
+  - lossless compression
+  - finite alphabets
+  - RICAN
+license-url: "https://opensource.org/licenses/MIT"
+commit: "main"
+type: software
+repository: "https://github.com/username/RICAN"
+preferred-citation:
+  type: article
+  title: "RICAN: A Fixed-Rate Representation Method for Finite Alphabets via Continued-Fraction Approximation"
+  authors:
+    - family-names: "Martínez Palomo"
+      given-names: "J. Jesús"
+  year: 2026
+  journal: "arXiv"
+  volume: "xxxx"
+  issue: "xxxx"
+  pages: "1-12"
+  doi: "10.xxxx/xxxxx"
+  url: "https://arxiv.org/abs/xxxx.xxxxx"
