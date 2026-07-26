@@ -1,0 +1,2056 @@
+\documentclass[onecolumn]{IEEEtran}
+
+% -------------------------------------------------
+% Paquetes
+% -------------------------------------------------
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{cite}
+\usepackage{url}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+
+% -------------------------------------------------
+% Documento
+% -------------------------------------------------
+
+\begin{document}
+
+% -------------------------------------------------
+% Título
+% -------------------------------------------------
+
+\title{
+RICAN: Un Marco de Representación Binaria de Tasa Fija
+para Alfabetos Finitos Usando Convergentes de Fracciones Continuas
+}
+
+\author{
+\IEEEauthorblockN{
+J. Jes\'us Mart\'inez Palomo
+}
+\IEEEauthorblockA{
+Investigador Independiente\\
+Correo: enviarcorreoajesusdelaunam@gmail.com
+}
+}
+
+\maketitle
+
+% -------------------------------------------------
+% Resumen
+% -------------------------------------------------
+
+\begin{abstract}
+
+Este artículo presenta RICAN (Representational Isomorphic Coding for
+Arbitrary Numeration), un marco matemático para construir
+representaciones binarias reversibles de tasa fija asintóticamente
+ajustadas para secuencias sobre alfabetos finitos arbitrarios.
+
+La contribución central es un método constructivo para seleccionar
+tamaños de bloque mediante aproximación por fracciones continuas de
+$\log_2(B)$. El método identifica longitudes de bloque derivadas de
+convergentes que generan representaciones deterministas de tasa fija
+con brechas de redondeo absolutas arbitrariamente pequeñas a lo largo
+de subsecuencias adecuadas. En consecuencia, el costo de
+representación normalizado por símbolo converge a cero, donde $B$
+denota la cardinalidad del alfabeto.
+
+RICAN no realiza compresión de fuente; minimiza el costo determinista
+de representación binaria de tasa fija.
+
+Para un bloque de longitud $K$ sobre un alfabeto de tamaño $B$, el
+número mínimo de bits requerido por cualquier representación binaria
+inyectiva de longitud fija está acotado por
+
+\[
+n(K)=\lceil K\log_2(B)\rceil
+\]
+
+bits.
+
+El costo de redondeo inevitable es por lo tanto
+
+\[
+G_B(K)=
+\lceil K\log_2(B)\rceil-K\log_2(B).
+\]
+
+RICAN demuestra que los denominadores de los convergentes de
+fracciones continuas de $\log_2(B)$ proporcionan una subsecuencia
+infinita de tamaños de bloque cuya brecha de redondeo absoluta tiende
+a cero, y por lo tanto cuyo costo de representación normalizado por
+símbolo converge a cero.
+
+El marco se aplica uniformemente a la familia infinita de alfabetos
+finitos
+
+\[
+\mathcal{A}=\{\Sigma_B:B\geq2\},
+\]
+
+donde
+
+\[
+\Sigma_B=\{0,1,\ldots,B-1\}.
+\]
+
+Los alfabetos de potencia de dos logran representaciones binarias
+exactas con costo cero. Para alfabetos no potencia de dos, los
+convergentes de fracciones continuas proporcionan tamaños de bloque
+deterministas asintóticamente ajustados.
+
+Para el alfabeto decimal ($B=10$), la implementación práctica de
+referencia utiliza el tamaño de bloque derivado del convergente
+
+\[
+K=643,
+\]
+
+que requiere
+
+\[
+n(K)=2136
+\]
+
+bits y logra un costo de representación de aproximadamente
+
+\[
+3.65\times10^{-7}
+\]
+
+bits por símbolo.
+
+Un denominador convergente superior mayor
+
+\[
+K=783032
+\]
+
+corresponde al convergente
+
+\[
+\frac{2601184}{783032}
+\]
+
+en la expansión en fracciones continuas de $\log_2(10)$, satisfaciendo
+
+\[
+K\log_2(10)=2601183.99999948\ldots,
+\]
+
+requiriendo
+
+\[
+n(K)=\lceil K\log_2(10)\rceil=2601184
+\]
+
+bits, representados exactamente por
+
+\[
+325148
+\]
+
+bytes.
+
+La brecha de redondeo total de este bloque completo es aproximadamente
+$5.20\times10^{-7}$ bits, mientras que el costo normalizado por
+símbolo es
+
+\[
+\epsilon_{10}(783032)
+=
+\frac{5.20\times10^{-7}}{783032}
+\approx
+6.64\times10^{-13}
+\]
+
+bits por símbolo.
+
+En este contexto, la proximidad de representación se refiere
+exclusivamente al costo de realización binaria y no implica
+compresión de fuente.
+
+A diferencia de los métodos estadísticos de codificación de fuente,
+RICAN no explota la redundancia de la fuente ni las distribuciones de
+probabilidad. La longitud codificada depende únicamente de la
+cardinalidad del alfabeto y la longitud de entrada.
+
+La contribución principal es un procedimiento constructivo para
+seleccionar representaciones de bloques de tasa fija con brecha de
+redondeo absoluta asintóticamente evanescente mediante aproximación
+por fracciones continuas.
+
+Se proporciona una implementación de referencia que utiliza el formato
+de representación autónomo RJ03.
+
+\end{abstract}
+
+% -------------------------------------------------
+% Términos de Indexación
+% -------------------------------------------------
+
+\begin{IEEEkeywords}
+
+Representación de tasa fija,
+alfabetos finitos,
+fracciones continuas,
+aproximación diofántica,
+representación enumerativa,
+codificación biyectiva.
+
+\end{IEEEkeywords}
+
+% =================================================
+% I. INTRODUCCIÓN
+% =================================================
+
+\section{Introducción}
+
+Los sistemas de información sin pérdida requieren mapeos reversibles
+entre secuencias de símbolos y descripciones binarias.
+
+Dos objetivos diferentes se asocian frecuentemente con tales mapeos:
+compresión de fuente y representación binaria.
+
+Los métodos de compresión intentan reducir la longitud esperada de
+descripción explotando propiedades estadísticas de la fuente. En
+contraste, los métodos de representación estudian el mapeo
+determinista entre un alfabeto finito y un espacio de almacenamiento
+binario.
+
+RICAN pertenece a la segunda categoría.
+
+El objetivo de RICAN no es comprimir el contenido de información, sino
+minimizar el costo de redondeo entero inevitable que aparece cuando
+espacios de alfabetos finitos se representan utilizando hardware
+binario.
+
+Para un alfabeto que contiene $B$ símbolos, la cantidad de información
+asociada con un símbolo seleccionado uniformemente es
+
+\[
+\log_2(B)
+\]
+
+bits.
+
+Cuando
+
+\[
+B=2^m ,
+\]
+
+la representación es exacta porque
+
+\[
+\log_2(B)=m .
+\]
+
+Sin embargo, para cardinalidades de alfabeto que no son potencias de
+dos, $\log_2(B)$ es generalmente irracional, impidiendo una
+representación binaria exacta de tasa fija de un símbolo.
+
+Una representación por bloques resuelve este problema agrupando
+símbolos.
+
+Para una longitud de bloque $K$, el número de secuencias posibles es
+
+\[
+|\Sigma_B^K|=B^K .
+\]
+
+Una representación binaria que contiene $n$ bits proporciona
+
+\[
+2^n
+\]
+
+estados posibles.
+
+Por lo tanto, cualquier representación reversible de tasa fija debe
+satisfacer
+
+\[
+2^n\geq B^K .
+\]
+
+Tomando logaritmos se obtiene:
+
+\[
+n\geq K\log_2(B).
+\]
+
+Debido a que el número de bits debe ser entero, la longitud mínima
+requerida del bloque es:
+
+\[
+n(K)=\lceil K\log_2(B)\rceil .
+\]
+
+El costo de redondeo resultante es:
+
+\[
+G_B(K)=
+\lceil K\log_2(B)\rceil
+-
+K\log_2(B).
+\]
+
+El problema central abordado por RICAN es la selección de tamaños de
+bloque $K$ que minimizan esta brecha determinista.
+
+La contribución de este trabajo es un método constructivo basado en
+fracciones continuas.
+
+Para valores irracionales de $\log_2(B)$, los denominadores de los
+convergentes de fracciones continuas proporcionan longitudes de
+bloque donde el producto
+
+\[
+K\log_2(B)
+\]
+
+se aproxima a un entero con precisión creciente.
+
+El marco está definido sobre la familia infinita de alfabetos finitos:
+
+\[
+\mathcal{A}
+=
+\{\Sigma_B:B\geq2\}.
+\]
+
+Por lo tanto, alfabetos binarios, alfabetos de ADN, dígitos decimales,
+símbolos hexadecimales, alfabetos de bytes y alfabetos finitos
+arbitrarios son tratados como instancias particulares del mismo modelo
+matemático.
+
+Las principales contribuciones de este artículo son:
+
+\begin{enumerate}
+
+\item Un marco matemático general de representación binaria de tasa fija
+para alfabetos finitos.
+
+\item Un procedimiento constructivo de selección de tamaños de bloque
+basado en convergentes de fracciones continuas de $\log_2(B)$.
+
+\item Un análisis teórico que prueba la existencia de subsecuencias
+convergentes con brecha de representación absoluta evanescente.
+
+\item Un formato de representación binaria reversible autónomo (RJ03)
+que almacena toda la información requerida para la reconstrucción
+determinista.
+
+\item Una validación experimental sobre secuencias decimales y
+múltiples alfabetos finitos.
+
+\end{enumerate}
+
+El resto de este artículo está organizado de la siguiente manera.
+
+La Sección II revisa enfoques relacionados.
+
+La Sección III introduce los fundamentos matemáticos.
+
+La Sección IV presenta los principales resultados teóricos.
+
+La Sección V describe el algoritmo de selección de bloques.
+
+La Sección VI presenta el marco de representación RICAN y el formato
+RJ03.
+
+La Sección VII presenta la evaluación experimental.
+
+La Sección VIII discute implicaciones y limitaciones.
+
+La Sección IX presenta la disponibilidad del código.
+
+La Sección X concluye el artículo.
+
+% =================================================
+% NOTACIÓN
+% =================================================
+
+\section{Notación}
+
+La siguiente notación se utiliza a lo largo de este artículo.
+
+\begin{table}[!t]
+\caption{Resumen de Notación}
+\label{tab:notation}
+\centering
+\begin{tabular}{ll}
+\toprule
+Símbolo & Significado\\
+\midrule
+$B$ & Cardinalidad del alfabeto\\
+$\Sigma_B$ & Alfabeto de tamaño $B$\\
+$K$ & Longitud de bloque en símbolos\\
+$n(K)$ & Longitud de representación binaria de un bloque\\
+$G_B(K)$ & Brecha de representación absoluta\\
+$\delta_B(K)$ & Costo de representación normalizado\\
+$\epsilon_B(K)$ & Costo de representación por símbolo\\
+$p_n/q_n$ & Convergente de fracción continua\\
+$L$ & Longitud de la secuencia de entrada\\
+$N(L)$ & Longitud total de representación\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La notación enfatiza la distinción entre tamaño de fuente y tamaño de
+representación.
+
+La cardinalidad del alfabeto $B$ determina la tasa ideal
+$\log_2(B)$, mientras que la longitud de bloque $K$ determina el
+comportamiento de redondeo entero.
+
+% =================================================
+% II. TRABAJO RELACIONADO
+% =================================================
+
+\section{Trabajo Relacionado}
+
+El problema de representar información de alfabetos finitos utilizando
+hardware binario ha sido estudiado desde varias perspectivas,
+incluyendo codificación estadística, representación enumerativa y
+técnicas de mapeo de longitud fija.
+
+RICAN difiere de estos enfoques porque su objetivo no es la reducción
+de la longitud esperada de descripción de la fuente, sino la
+minimización del costo determinista de representación binaria.
+
+\subsection{Codificación Estadística de Fuente}
+
+Los métodos clásicos de codificación de fuente optimizan la longitud
+de representación cuando las propiedades estadísticas de la fuente
+están disponibles.
+
+La codificación de Huffman asigna palabras de código prefijo de
+longitud variable según las probabilidades de los símbolos y
+proporciona optimalidad entre los códigos prefijo binarios para una
+distribución conocida \cite{huffman1952}.
+
+La codificación aritmética representa secuencias como subintervalos del
+intervalo unitario y evita la limitación de longitud entera de la
+codificación prefijo convencional \cite{rissanen1979}.
+
+Los sistemas numéricos asimétricos (ANS) logran un rendimiento de
+codificación entrópica comparable a la codificación aritmética
+permitiendo implementaciones eficientes con máquinas de estados finitos
+\cite{duda2013}.
+
+Estas técnicas explotan la redundancia estadística.
+
+Su objetivo es por lo tanto diferente de RICAN, que construye
+representaciones de tasa fija cuyo tamaño depende únicamente de la
+cardinalidad del alfabeto y la longitud de la secuencia.
+
+\subsection{Métodos Basados en Diccionario}
+
+Los métodos basados en diccionario reducen la longitud de descripción
+de la fuente identificando estructuras repetidas en las secuencias.
+
+La familia Lempel-Ziv introdujo algoritmos universales que representan
+subcadenas repetidas mediante referencias a patrones observados
+previamente \cite{ziv1977}.
+
+Los sistemas de compresión prácticos modernos frecuentemente combinan
+métodos de diccionario con codificación entrópica para mejorar el
+rendimiento en datos estructurados.
+
+RICAN no realiza detección de patrones, estimación de probabilidades o
+eliminación de redundancia.
+
+En cambio, aborda el problema independiente de representar cada bloque
+posible de un alfabeto finito mediante un mapeo binario determinista
+con costo mínimo de redondeo entero.
+
+\subsection{Representación Enumerativa}
+
+Los métodos enumerativos proporcionan procedimientos sistemáticos de
+clasificación y desclasificación para espacios combinatorios finitos.
+
+Cover introdujo la codificación enumerativa de fuente como un método
+para mapear conjuntos de secuencias a índices enteros
+\cite{cover1973}.
+
+Desarrollos posteriores extendieron estas ideas a secuencias
+restringidas y representaciones combinatorias eficientes
+\cite{immink2004}.
+
+RICAN está relacionado con la representación enumerativa porque ambos
+enfoques utilizan la cardinalidad de espacios finitos.
+
+Sin embargo, el objetivo principal difiere.
+
+La codificación enumerativa se centra en clasificar clases específicas
+de secuencias, frecuentemente bajo restricciones.
+
+RICAN se centra en la selección de longitudes de bloque $K$ tales que
+la longitud de representación binaria
+
+\[
+\lceil K\log_2(B)\rceil
+\]
+
+tenga un error de redondeo determinista mínimo.
+
+\subsection{Representación Binaria de Longitud Fija}
+
+Un alfabeto finito con cardinalidad $B$ requiere al menos
+
+\[
+\lceil\log_2(B)\rceil
+\]
+
+bits cuando los símbolos se representan independientemente.
+
+Este enfoque es óptimo sólo cuando $B$ es una potencia de dos.
+
+Para alfabetos generales, la representación por bloques reduce el
+efecto del redondeo considerando el espacio de bloques completo:
+
+\[
+|\Sigma_B^K|=B^K .
+\]
+
+La longitud binaria mínima es por lo tanto:
+
+\[
+n(K)=\lceil K\log_2(B)\rceil .
+\]
+
+RICAN estudia la selección matemática de $K$ en lugar de la
+construcción de un nuevo modelo probabilístico de codificación.
+
+\subsection{Fracciones Continuas y Aproximación Diofántica}
+
+Las fracciones continuas proporcionan aproximaciones racionales
+altamente precisas a números irracionales.
+
+Para un número irracional $x$, la expansión en fracciones continuas es
+
+\[
+x=[a_0;a_1,a_2,\ldots].
+\]
+
+Los convergentes son fracciones
+
+\[
+\frac{p_n}{q_n}
+\]
+
+con la propiedad de aproximación clásica:
+
+\[
+\left|
+x-\frac{p_n}{q_n}
+\right|
+<
+\frac{1}{q_nq_{n+1}} .
+\]
+
+Multiplicando por $q_n$ se obtiene:
+
+\[
+|q_nx-p_n|
+<
+\frac{1}{q_{n+1}} .
+\]
+
+Por lo tanto, los denominadores $q_n$ identifican múltiplos enteros de
+$x$ que se aproximan a valores enteros con precisión creciente.
+
+RICAN aplica esta propiedad clásica de teoría de números a la
+selección de tamaños de bloque de representación.
+
+Para
+
+\[
+x=\log_2(B),
+\]
+
+los denominadores seleccionados proporcionan longitudes de bloque
+donde:
+
+\[
+K\log_2(B)
+\]
+
+está cerca de un límite entero.
+
+\subsection{Posición de RICAN}
+
+RICAN debe interpretarse como un marco matemático de representación.
+
+Su contribución no es un algoritmo de codificación entrópica ni un
+mecanismo de compresión.
+
+El marco proporciona:
+
+\begin{itemize}
+
+\item un modelo general para representación de alfabetos finitos,
+
+\item un método para seleccionar tamaños de bloque de tasa fija,
+
+\item un análisis teórico basado en aproximación por fracciones
+continuas,
+
+\item un formato binario reversible autónomo.
+
+\end{itemize}
+
+La distinción conceptual entre RICAN y los métodos de codificación
+convencionales se resume en la Tabla~\ref{tab:comparison}.
+
+\begin{table}[!t]
+\caption{Comparación Conceptual Entre Enfoques de Representación y
+Compresión}
+\label{tab:comparison}
+\centering
+\begin{tabular}{lll}
+\toprule
+Método & Objetivo & Estadísticas Requeridas\\
+\midrule
+Codificación Huffman &
+Minimización de longitud esperada &
+Sí\\
+
+Codificación Aritmética &
+Aproximación de tasa entrópica &
+Sí\\
+
+ANS &
+Eficiencia de codificación entrópica &
+Sí\\
+
+Métodos de Diccionario &
+Reducción de redundancia de patrones &
+Sí\\
+
+Codificación Enumerativa &
+Clasificación de espacio finito &
+A veces\\
+
+RICAN &
+Minimización de brecha de representación de tasa fija &
+No\\
+
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =================================================
+% III. PRELIMINARES
+% =================================================
+
+\section{Preliminares}
+
+Esta sección introduce las definiciones matemáticas requeridas para el
+marco RICAN.
+
+\subsection{Familia de Alfabetos Finitos}
+
+RICAN considera la familia de alfabetos finitos:
+
+\[
+\mathcal{A}
+=
+\{\Sigma_B:B\geq2\},
+\]
+
+donde:
+
+\[
+\Sigma_B=
+\{0,1,\ldots,B-1\}.
+\]
+
+El valor $B$ determina completamente el problema de representación.
+
+Ejemplos representativos incluyen:
+
+\begin{itemize}
+
+\item $B=2$: alfabeto binario.
+
+\item $B=4$: alfabeto de ADN.
+
+\item $B=10$: dígitos decimales.
+
+\item $B=16$: alfabeto hexadecimal.
+
+\item $B=256$: alfabeto de bytes.
+
+\end{itemize}
+
+\subsection{Racionalidad de $\log_2(B)$}
+
+\begin{lemma}
+\label{lem:rationality}
+
+Para un entero $B\geq2$,
+
+\[
+\log_2(B)\in\mathbb{Q}
+\]
+
+si y sólo si
+
+\[
+B=2^m
+\]
+
+para algún entero $m\geq1$.
+
+\end{lemma}
+
+\begin{proof}
+
+Si:
+
+\[
+B=2^m,
+\]
+
+entonces:
+
+\[
+\log_2(B)=m,
+\]
+
+que es racional.
+
+Recíprocamente, supongamos:
+
+\[
+\log_2(B)=\frac{p}{q}
+\]
+
+en términos mínimos.
+
+Entonces:
+
+\[
+B^q=2^p .
+\]
+
+Por factorización única, $B$ puede contener únicamente el factor primo
+$2$. Por lo tanto:
+
+\[
+B=2^m
+\]
+
+para algún entero $m$.
+
+\end{proof}
+
+\subsection{Espacio de Bloques}
+
+Para una longitud de bloque $K$, el conjunto de bloques de entrada
+posibles es:
+
+\[
+\Sigma_B^K .
+\]
+
+Su cardinalidad es:
+
+\[
+|\Sigma_B^K|=B^K .
+\]
+
+Una palabra binaria de longitud $n$ proporciona:
+
+\[
+2^n
+\]
+
+estados posibles.
+
+Por lo tanto, una representación inyectiva requiere:
+
+\[
+2^n\geq B^K .
+\]
+
+Tomando logaritmos:
+
+\[
+n\geq K\log_2(B).
+\]
+
+Debido a que $n$ debe ser entero:
+
+\[
+n(K)=\lceil K\log_2(B)\rceil .
+\]
+
+\subsection{Brecha de Representación Absoluta}
+
+\begin{definition}
+
+Para una cardinalidad de alfabeto $B$, la brecha de representación
+absoluta es:
+
+\[
+G_B(K)=
+\lceil K\log_2(B)\rceil
+-
+K\log_2(B).
+\]
+
+Esta cantidad mide la distancia de redondeo entero, en bits, entre
+la longitud de representación ideal de valor real y la longitud real
+del bloque binario.
+
+\end{definition}
+
+\subsection{Costo de Representación Normalizado}
+
+\begin{definition}
+
+El costo de representación normalizado es:
+
+\[
+\delta_B(K)
+=
+\frac{G_B(K)}
+{K\log_2(B)} .
+\]
+
+El costo de representación por símbolo es:
+
+\[
+\epsilon_B(K)
+=
+\frac{G_B(K)}{K}.
+\]
+
+Estas cantidades describen la cercanía de la representación relativa
+al límite ideal de tasa fija.
+
+No representan eficiencia de compresión.
+
+\end{definition}
+
+\subsection{Representación Asintóticamente Ajustada}
+
+\begin{definition}
+
+Una secuencia de tamaños de bloque $K_i$ define una representación
+asintóticamente ajustada con respecto al costo de redondeo si:
+
+\[
+\lim_{i\rightarrow\infty}
+\delta_B(K_i)=0 .
+\]
+
+Para RICAN, la secuencia seleccionada se obtiene de denominadores
+convergentes adecuados de fracciones continuas de $\log_2(B)$.
+
+\end{definition}
+
+\subsection{Longitud de Representación de Tasa Fija}
+
+Para una secuencia de entrada de longitud $L$, la longitud total de
+representación es:
+
+\[
+N(L)=
+\left\lceil\frac{L}{K}\right\rceil n(K),
+\]
+
+donde:
+
+\[
+n(K)=\lceil K\log_2(B)\rceil .
+\]
+
+Esta expresión asume que el bloque incompleto final se codifica
+usando su longitud de bits real y excluye los metadatos constantes
+del contenedor.
+
+Para $K$ grande y $L$ grande, la tasa efectiva se aproxima a:
+
+\[
+\log_2(B)
+\]
+
+bits por símbolo a lo largo de la subsecuencia convergente
+seleccionada.
+
+\subsection{Relación Matemática con la Codificación Enumerativa}
+
+RICAN y la codificación enumerativa comparten el uso de clasificación
+entera sobre espacios finitos.
+
+En la codificación enumerativa, las secuencias se mapean a índices
+enteros mediante conteo combinatorio.
+
+En RICAN, el mapeo se define por conversión de base sobre bloques
+completos:
+
+\[
+X(S)=\sum_{i=0}^{K-1}s_iB^{K-1-i}.
+\]
+
+Ambos enfoques producen mapeos reversibles.
+
+Sin embargo, el criterio de optimización difiere.
+
+La codificación enumerativa típicamente minimiza la longitud esperada
+del índice bajo restricciones de probabilidad.
+
+RICAN minimiza el costo de redondeo determinista a nivel de bloque
+mediante selección de bloques por fracciones continuas.
+
+Por lo tanto, RICAN puede interpretarse como un caso especial de
+representación enumerativa donde:
+
+\begin{itemize}
+
+\item el espacio enumerado es el producto cartesiano completo
+$\Sigma_B^K$,
+
+\item el objetivo es la optimización de la longitud de bloque,
+
+\item la selección de $K$ se realiza mediante aproximación
+diofántica.
+
+\end{itemize}
+
+Esta conexión aclara la posición de RICAN dentro de las técnicas de
+representación existentes.
+
+% =================================================
+% IV. PRINCIPALES RESULTADOS TEÓRICOS
+% =================================================
+
+\section{Principales Resultados Teóricos}
+
+Esta sección establece el fundamento matemático de RICAN.
+
+La observación central es que el costo de representación de tasa fija
+depende de la distancia entre:
+
+\[
+K\log_2(B)
+\]
+
+y el valor entero más cercano.
+
+Para una cardinalidad de alfabeto $B$, definimos:
+
+\[
+x_B=\log_2(B).
+\]
+
+La brecha de representación es:
+
+\[
+G_B(K)
+=
+\lceil Kx_B\rceil-Kx_B .
+\]
+
+El objetivo de la construcción RICAN es seleccionar longitudes de
+bloque $K$ para las cuales esta cantidad se vuelve arbitrariamente
+pequeña.
+
+\subsection{Distancia a Valores Enteros}
+
+Para un número real $y$, definimos su distancia al entero más cercano
+como:
+
+\[
+\operatorname{dist}(y,\mathbb{Z})
+=
+\min_{m\in\mathbb{Z}}|y-m|.
+\]
+
+Para:
+
+\[
+x_B=\log_2(B),
+\]
+
+definimos:
+
+\[
+d_B(K)
+=
+\operatorname{dist}(Kx_B,\mathbb{Z}).
+\]
+
+Esta cantidad mide qué tan cerca está la longitud de representación
+ideal de un número entero de bits.
+
+Cuando el entero más cercano corresponde a la operación de techo:
+
+\[
+\lceil Kx_B\rceil,
+\]
+
+la brecha de representación satisface:
+
+\[
+G_B(K)=d_B(K).
+\]
+
+\subsection{Aproximación por Fracciones Continuas}
+
+Sea $x$ irracional y sea:
+
+\[
+\frac{p_n}{q_n}
+\]
+
+un convergente de su expansión en fracciones continuas.
+
+Una propiedad clásica de las fracciones continuas es:
+
+\[
+\left|
+x-\frac{p_n}{q_n}
+\right|
+<
+\frac{1}{q_nq_{n+1}} .
+\]
+
+Multiplicando por $q_n$ se obtiene:
+
+\[
+|q_nx-p_n|
+<
+\frac{1}{q_{n+1}} .
+\]
+
+Debido a que $p_n$ es un entero:
+
+\[
+\operatorname{dist}(q_nx,\mathbb{Z})
+\leq
+|q_nx-p_n|.
+\]
+
+Por lo tanto:
+
+\[
+\operatorname{dist}(q_nx,\mathbb{Z})
+<
+\frac{1}{q_{n+1}} .
+\]
+
+\begin{lemma}
+\label{lem:convergent}
+
+Sea $x$ irracional y sea
+
+\[
+\frac{p_n}{q_n}
+\]
+
+un convergente de fracción continua de $x$.
+
+Entonces:
+
+\[
+\operatorname{dist}(q_nx,\mathbb{Z})
+<
+\frac{1}{q_{n+1}} .
+\]
+
+\end{lemma}
+
+\begin{proof}
+
+El teorema de aproximación clásico para fracciones continuas da:
+
+\[
+|q_nx-p_n|
+<
+\frac{1}{q_{n+1}} .
+\]
+
+Como $p_n$ pertenece a $\mathbb{Z}$,
+
+\[
+\operatorname{dist}(q_nx,\mathbb{Z})
+\leq
+|q_nx-p_n|.
+\]
+
+Combinando ambas expresiones se prueba el resultado.
+
+\end{proof}
+
+\subsection{Selección de Bloques Basada en Convergentes}
+
+El lema anterior proporciona directamente una regla de construcción
+para RICAN.
+
+Para:
+
+\[
+x_B=\log_2(B),
+\]
+
+elegimos tamaños de bloque:
+
+\[
+K=q_n,
+\]
+
+donde $q_n$ son denominadores de convergentes de fracciones continuas.
+
+Entonces:
+
+\[
+Kx_B
+\]
+
+se aproxima a un valor entero con un error acotado por:
+
+\[
+\frac{1}{q_{n+1}} .
+\]
+
+\begin{theorem}
+\label{thm:convergent}
+
+Sea:
+
+\[
+x_B=\log_2(B)
+\]
+
+irracional.
+
+Sea:
+
+\[
+\frac{p_n}{q_n}
+\]
+
+los convergentes de la expansión en fracciones continuas de $x_B$.
+
+Entonces las longitudes de bloque:
+
+\[
+K_n=q_n
+\]
+
+satisfacen:
+
+\[
+\operatorname{dist}(K_nx_B,\mathbb{Z})
+<
+\frac{1}{q_{n+1}} .
+\]
+
+En consecuencia, existe una secuencia infinita de tamaños de bloque
+RICAN cuya longitud de representación ideal se aproxima a un valor
+entero con error absoluto arbitrariamente pequeño.
+
+\end{theorem}
+
+\begin{proof}
+
+Del Lema~\ref{lem:convergent}:
+
+\[
+\operatorname{dist}(q_nx_B,\mathbb{Z})
+<
+\frac{1}{q_{n+1}} .
+\]
+
+Los denominadores de los convergentes de fracciones continuas
+satisfacen:
+
+\[
+q_n\rightarrow\infty .
+\]
+
+Por lo tanto:
+
+\[
+\frac{1}{q_{n+1}}\rightarrow0 .
+\]
+
+Por lo tanto:
+
+\[
+\lim_{n\rightarrow\infty}
+\operatorname{dist}(q_nx_B,\mathbb{Z})
+=0 .
+\]
+
+Esto prueba que los denominadores convergentes proporcionan una
+secuencia infinita de tamaños de bloque con distancia evanescente
+entre las longitudes de representación ideal y entera.
+
+\end{proof}
+
+\subsection{Existencia de Brecha de Representación Absoluta Evanescente}
+
+El teorema anterior se refiere a la distancia al entero más cercano.
+
+Para RICAN, la cantidad relevante es la brecha de techo:
+
+\[
+G_B(K)
+=
+\lceil Kx_B\rceil-Kx_B .
+\]
+
+\begin{theorem}
+\label{thm:abs_overhead}
+
+Sea:
+
+\[
+x_B=\log_2(B)
+\]
+
+irracional.
+
+Entonces existe una subsecuencia infinita de denominadores
+convergentes de fracciones continuas:
+
+\[
+K_i=q_{n_i}
+\]
+
+tal que:
+
+\[
+G_B(K_i)\rightarrow0 .
+\]
+
+Por lo tanto, el costo de representación absoluto de tasa fija de
+RICAN puede hacerse arbitrariamente pequeño mediante selección de
+bloques basada en convergentes.
+
+\end{theorem}
+
+\begin{proof}
+
+Del Teorema~\ref{thm:convergent}, los denominadores convergentes
+satisfacen:
+
+\[
+\operatorname{dist}(q_nx_B,\mathbb{Z})
+<
+\frac{1}{q_{n+1}} .
+\]
+
+Los convergentes alternan alrededor del número irracional $x_B$.
+Por lo tanto, infinitos convergentes se aproximan a $x_B$ desde
+arriba e infinitos desde abajo.
+
+Consideremos la subsecuencia que se aproxima desde arriba:
+
+\[
+\frac{p_{n_i}}{q_{n_i}}>x_B .
+\]
+
+Para índices suficientemente grandes:
+
+\[
+p_{n_i}
+=
+\lceil q_{n_i}x_B\rceil .
+\]
+
+Por lo tanto:
+
+\[
+G_B(q_{n_i})
+=
+p_{n_i}-q_{n_i}x_B .
+\]
+
+Usando la cota de fracciones continuas:
+
+\[
+G_B(q_{n_i})
+<
+\frac{1}{q_{n_i+1}} .
+\]
+
+Como:
+
+\[
+q_{n_i+1}\rightarrow\infty ,
+\]
+
+obtenemos:
+
+\[
+\lim_{i\rightarrow\infty}
+G_B(q_{n_i})
+=
+0 .
+\]
+
+Por lo tanto, la subsecuencia convergente seleccionada proporciona
+tamaños de bloque con brecha de representación absoluta evanescente.
+
+\end{proof}
+
+\begin{remark}
+
+El resultado es específico de la subsecuencia convergente seleccionada.
+
+El costo normalizado:
+
+\[
+\frac{G_B(K)}{K}
+\]
+
+puede disminuir para muchas secuencias de tamaños de bloque
+crecientes.
+
+Sin embargo, el crecimiento arbitrario de $K$ no garantiza que la
+brecha de redondeo entero absoluta disminuya.
+
+RICAN proporciona una regla de selección determinista mediante
+fracciones continuas que identifica longitudes de bloque con error de
+redondeo absoluto excepcionalmente pequeño.
+
+\end{remark}
+
+% =================================================
+% V. ALGORITMO DE SELECCIÓN DE TAMAÑO DE BLOQUE
+% =================================================
+
+\section{Algoritmo de Selección de Tamaño de Bloque}
+
+Los resultados teóricos proporcionan un procedimiento constructivo
+para seleccionar tamaños de bloque RICAN.
+
+Dada una cardinalidad de alfabeto $B$ y un umbral de brecha de
+representación deseado $\epsilon$, el algoritmo calcula los
+convergentes de fracciones continuas de:
+
+\[
+\log_2(B).
+\]
+
+Cada denominador se evalúa como un tamaño de bloque candidato.
+
+Para cada candidato:
+
+\[
+K=q_i,
+\]
+
+se calcula la longitud binaria requerida:
+
+\[
+n(K)=\lceil K\log_2(B)\rceil .
+\]
+
+La brecha de representación es:
+
+\[
+G_B(K)
+=
+n(K)-K\log_2(B).
+\]
+
+Para el alfabeto decimal:
+
+\[
+B=10,
+\]
+
+la implementación de referencia utiliza:
+
+\[
+K=643 .
+\]
+
+Este tamaño de bloque proporciona un equilibrio práctico entre
+complejidad aritmética y ajuste de la representación.
+
+Valores derivados de convergentes mayores, tales como:
+
+\[
+K=783032,
+\]
+
+demuestran el comportamiento asintótico de la construcción pero
+requieren operaciones aritméticas con enteros más grandes.
+
+Todas las evaluaciones numéricas de convergentes deben utilizar
+aritmética de precisión arbitraria para evitar errores de redondeo
+de punto flotante.
+
+\begin{algorithm}[!t]
+\caption{Selección de Bloque RICAN Usando Fracciones Continuas}
+\label{alg:block}
+\begin{algorithmic}[1]
+\REQUIRE Cardinalidad de alfabeto $B\geq2$, brecha objetivo $\epsilon$
+\ENSURE Tamaño de bloque $K$, longitud binaria $n(K)$
+\STATE Calcular:
+\[
+x\leftarrow\log_2(B)
+\]
+\STATE Generar expansión en fracciones continuas de $x$
+\STATE Calcular convergentes:
+\[
+p_i/q_i
+\]
+\FOR{cada convergente}
+\STATE
+\[
+K\leftarrow q_i
+\]
+\STATE
+\[
+n(K)\leftarrow\lceil Kx\rceil
+\]
+\STATE
+\[
+G\leftarrow n(K)-Kx
+\]
+\IF{$G<\epsilon$}
+\RETURN $(K,n(K),G)$
+\ENDIF
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+% =================================================
+% VI. MARCO DE REPRESENTACIÓN
+% =================================================
+
+\section{Marco de Representación}
+
+\subsection{Modelo General de Codificación}
+
+El proceso de codificación RICAN construye un mapeo inyectivo desde
+bloques de alfabeto finito a palabras binarias.
+
+Dada una secuencia de entrada:
+
+\[
+S=s_0s_1\ldots s_{L-1}
+\]
+
+sobre un alfabeto:
+
+\[
+\Sigma_B
+\]
+
+con cardinalidad $B$, y un tamaño de bloque seleccionado $K$, la
+secuencia se particiona en bloques.
+
+Para un bloque completo:
+
+\[
+B_i=(s_0,s_1,\ldots,s_{K-1}),
+\]
+
+el valor entero correspondiente es:
+
+\[
+X(B_i)
+=
+\sum_{j=0}^{K-1}
+s_j B^{K-1-j}.
+\]
+
+Los valores posibles satisfacen:
+
+\[
+0\leq X(B_i)<B^K .
+\]
+
+Dado que:
+
+\[
+B^K\leq2^{n(K)},
+\]
+
+donde:
+
+\[
+n(K)=\lceil K\log_2(B)\rceil ,
+\]
+
+cada bloque puede representarse de manera única usando exactamente
+$n(K)$ bits.
+
+El bloque incompleto final, cuando está presente, se codifica usando
+su longitud real:
+
+\[
+K'<K .
+\]
+
+El decodificador reconstruye la secuencia original aplicando el mapeo
+inverso de entero a símbolo usando división repetida por $B$.
+
+\subsection{Mapeo de Representación Inyectiva}
+
+Para un alfabeto y tamaño de bloque fijos, el codificador se define
+como:
+
+\[
+E_B:
+\Sigma_B^L
+\rightarrow
+\{0,1\}^{N(L)} .
+\]
+
+El mapeo es inyectivo porque cada bloque de entrada válido se asigna
+a un valor entero único.
+
+El decodificador es el mapeo inverso sobre la imagen del codificador:
+
+\[
+D_B:
+\operatorname{Im}(E_B)
+\rightarrow
+\Sigma_B^L .
+\]
+
+Por lo tanto:
+
+\[
+D_B(E_B(S))=S
+\]
+
+para toda secuencia de entrada válida $S$.
+
+El espacio de representación binaria puede contener estados no
+utilizados porque:
+
+\[
+2^{n(K)}>B^K
+\]
+
+para alfabetos no potencia de dos.
+
+Estos estados no utilizados no afectan la reversibilidad porque el
+decodificador opera únicamente sobre representaciones codificadas
+válidas.
+
+\subsection{Alfabetos de Potencia de Dos}
+
+Para:
+
+\[
+B=2^m ,
+\]
+
+la representación es exacta:
+
+\[
+n(K)
+=
+\lceil Km\rceil
+=
+Km .
+\]
+
+Por lo tanto:
+
+\[
+G_B(K)=0 .
+\]
+
+Ejemplos incluyen:
+
+\begin{itemize}
+
+\item Alfabeto binario ($B=2$): un bit por símbolo.
+
+\item Alfabeto de ADN ($B=4$): dos bits por símbolo.
+
+\item Alfabeto hexadecimal ($B=16$): cuatro bits por símbolo.
+
+\item Alfabeto de bytes ($B=256$): ocho bits por símbolo.
+
+\end{itemize}
+
+\subsection{El Formato de Representación Autónomo RJ03}
+
+La implementación de referencia utiliza el formato de representación
+binaria RJ03.
+
+RJ03 está diseñado como un contenedor de representación reversible
+autónomo.
+
+A diferencia de los formatos codificados entrópicamente, RJ03 no
+requiere:
+
+\begin{itemize}
+
+\item modelos de probabilidad,
+
+\item estados adaptativos,
+
+\item diccionarios externos,
+
+\item datos de entrenamiento.
+
+\end{itemize}
+
+Todos los parámetros requeridos para la reconstrucción se almacenan
+dentro del archivo de representación.
+
+El formato contiene:
+
+\begin{itemize}
+
+\item definición del alfabeto,
+
+\item cardinalidad del alfabeto,
+
+\item tamaño de bloque,
+
+\item longitud original de la secuencia,
+
+\item flujo de bloques codificados.
+
+\end{itemize}
+
+Los campos binarios utilizan representación little-endian sin signo.
+
+Los bits no utilizados en el byte final son bits de relleno y se
+ignoran durante la decodificación.
+
+\begin{table}[!t]
+\caption{Formato de Representación Autónomo RJ03}
+\label{tab:rj03}
+\centering
+\begin{tabular}{lll}
+\toprule
+Desplazamiento & Tamaño & Campo\\
+\midrule
+0 & 4 & Identificador mágico ``RJ03''\\
+4 & 4 & Versión del formato\\
+8 & 4 & Cardinalidad del alfabeto $B$\\
+12 & 8 & Tamaño de bloque $K$\\
+20 & 8 & Bits por bloque $n(K)$\\
+28 & 4 & Longitud del alfabeto\\
+32 & variable & Símbolos del alfabeto\\
+-- & 8 & Longitud de secuencia original $L$\\
+-- & 8 & Conteo de bloques completos\\
+-- & 8 & Tamaño de bloque residual\\
+-- & variable & Flujo de bits codificado\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =================================================
+% VII. EVALUACIÓN EXPERIMENTAL
+% =================================================
+
+\section{Evaluación Experimental}
+
+Los experimentos evalúan las propiedades matemáticas de representación
+de RICAN.
+
+El objetivo no es la comparación de compresión.
+
+Los experimentos verifican:
+
+\begin{enumerate}
+
+\item reconstrucción exacta,
+
+\item concordancia entre tamaños de representación teóricos y
+prácticos,
+
+\item independencia de la longitud de representación de las
+estadísticas de la fuente,
+
+\item aplicabilidad a múltiples alfabetos finitos.
+
+\end{enumerate}
+
+\subsection{Verificación de Representación Decimal}
+
+Una secuencia decimal que contiene:
+
+\[
+L=1\,000\,508
+\]
+
+dígitos fue codificada con:
+
+\[
+B=10
+\]
+
+y:
+
+\[
+K=643 .
+\]
+
+El tamaño de bloque teórico es:
+
+\[
+n(K)=2136
+\]
+
+bits.
+
+El tamaño medido del contenedor se muestra en la
+Tabla~\ref{tab:decimal-validation}.
+
+\begin{table}[!t]
+\caption{Verificación de representación decimal}
+\label{tab:decimal-validation}
+\centering
+\begin{tabular}{lc}
+\toprule
+Parámetro & Valor\\
+\midrule
+Símbolos de entrada & 1,000,508\\
+Tamaño del alfabeto & 10\\
+Tamaño de bloque & 643\\
+Bits por bloque & 2136\\
+Tamaño codificado & 415,474 bytes\\
+Verificación & PASO\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El tamaño medido incluye el costo del contenedor RJ03 requerido para
+la reconstrucción autónoma.
+
+\subsection{Independencia de la Longitud de Representación}
+
+Debido a que RICAN es un marco de representación de tasa fija, el
+tamaño de salida depende de:
+
+\[
+B
+\]
+
+y:
+
+\[
+L .
+\]
+
+No depende de la distribución de probabilidad de los símbolos.
+
+Secuencias con diferentes propiedades estadísticas pero longitud
+idéntica y cardinalidad de alfabeto idéntica producen tamaños de
+representación idénticos.
+
+\begin{table}[!t]
+\caption{Independencia de la Longitud de Representación}
+\label{tab:independence}
+\centering
+\begin{tabular}{lc}
+\toprule
+Tipo de Fuente & Tamaño Codificado\\
+\midrule
+Dígitos de constantes matemáticas & Igual\\
+Secuencia decimal aleatoria & Igual\\
+Secuencia decimal estructurada & Igual\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Generalización de Alfabetos}
+
+El mismo marco se aplica a múltiples alfabetos finitos.
+
+\begin{table}[!t]
+\caption{Verificación de Alfabetos Finitos}
+\label{tab:alphabet}
+\centering
+\begin{tabular}{ccc}
+\toprule
+Alfabeto & $B$ & Resultado\\
+\midrule
+Binario & 2 & PASO\\
+ADN & 4 & PASO\\
+Decimal & 10 & PASO\\
+Hexadecimal &16& PASO\\
+ASCII &128& PASO\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =================================================
+% VIII. DISCUSIÓN
+% =================================================
+
+\section{Discusión}
+
+\subsection{Contribución Principal}
+
+La contribución principal de RICAN es la construcción de esquemas de
+representación de tasa fija cuyo costo de redondeo entero puede
+reducirse mediante selección de bloques por fracciones continuas.
+
+La existencia de representaciones de longitud fija se sigue
+directamente de la cardinalidad de espacio finito.
+
+RICAN contribuye con un método determinista para seleccionar tamaños
+de bloque con brechas de representación excepcionalmente pequeñas.
+
+\subsection{Relación con la Compresión}
+
+RICAN no reduce la información de la fuente.
+
+No explota:
+
+\begin{itemize}
+
+\item frecuencias de símbolos,
+
+\item patrones repetidos,
+
+\item dependencias estadísticas.
+
+\end{itemize}
+
+Por lo tanto, RICAN no debe considerarse un reemplazo para métodos de
+codificación entrópica.
+
+Su objetivo es la optimización del costo determinista de
+representación binaria.
+
+\subsection{Limitaciones}
+
+El marco actual tiene varias limitaciones.
+
+Los tamaños de bloque convergentes muy grandes requieren aritmética
+de enteros de precisión arbitraria.
+
+El formato de representación introduce un costo de metadatos
+constante.
+
+Además, debido a que el método no utiliza modelos de probabilidad, no
+proporciona ganancias de compresión para fuentes redundantes.
+
+% =================================================
+% IX. DISPONIBILIDAD DEL CÓDIGO
+% =================================================
+
+\section{Disponibilidad del Código y Reproductibilidad}
+
+La implementación de referencia, la especificación RJ03 y los scripts
+de evaluación están disponibles públicamente en:
+
+\begin{center}
+\url{https://github.com/SequenceOfManyZerosAndOnes/RICAN}
+\end{center}
+
+El repositorio contiene:
+
+\begin{itemize}
+
+\item implementación del codificador y decodificador,
+
+\item documentación del formato RJ03,
+
+\item ejemplos reproducibles,
+
+\item documentación matemática.
+
+\end{itemize}
+
+Los experimentos se realizaron utilizando:
+
+\begin{verbatim}
+Python 3.13
+RICAN RJ03 referencia de implementación
+\end{verbatim}
+
+Se planea un lanzamiento de archivo permanente a través de Zenodo.
+
+Versión del software:
+
+\[
+\text{RICAN RJ03 v1.0.0 -- Julio 2026}
+\]
+
+% =================================================
+% X. CONCLUSIÓN
+% =================================================
+
+\section{Conclusión}
+
+Este artículo presentó RICAN, un marco de representación binaria de
+tasa fija para alfabetos finitos basado en selección de convergentes
+de fracciones continuas.
+
+El marco se aplica uniformemente a:
+
+\[
+\mathcal{A}
+=
+\{\Sigma_B:B\geq2\}.
+\]
+
+Para alfabetos de potencia de dos:
+
+\[
+B=2^m,
+\]
+
+la representación es exacta.
+
+Para alfabetos no potencia de dos, los convergentes de fracciones
+continuas de $\log_2(B)$ proporcionan longitudes de bloque cuya
+brecha de representación absoluta se aproxima a cero a lo largo de la
+subsecuencia seleccionada.
+
+Para la representación decimal:
+
+\[
+B=10,
+\]
+
+la implementación práctica utiliza:
+
+\[
+K=643,
+\]
+
+mientras que valores derivados de convergentes mayores demuestran el
+comportamiento asintótico de la construcción.
+
+RICAN proporciona un marco matemático para estudiar el límite entre
+la representación de alfabetos finitos y el almacenamiento binario.
+
+Las direcciones de investigación futura incluyen:
+
+\begin{itemize}
+
+\item representación de ADN a gran escala,
+
+\item aceleración por hardware,
+
+\item implementaciones paralelas,
+
+\item optimización de bloques convergentes muy grandes.
+
+\end{itemize}
+
+% =================================================
+% REFERENCIAS
+% =================================================
+
+\bibliographystyle{IEEEtran}
+\begin{thebibliography}{00}
+
+\bibitem{shannon1948}
+C. E. Shannon,
+``Una Teoría Matemática de la Comunicación,''
+\emph{Bell System Technical Journal},
+vol. 27,
+pp. 379--423, 623--656,
+1948.
+
+\bibitem{huffman1952}
+D. A. Huffman,
+``Un Método para la Construcción de Códigos de Redundancia Mínima,''
+\emph{Proceedings of the IRE},
+vol. 40,
+no. 9,
+pp. 1098--1101,
+1952.
+
+\bibitem{ziv1977}
+J. Ziv y A. Lempel,
+``Un Algoritmo Universal para Compresión de Datos Secuenciales,''
+\emph{IEEE Transactions on Information Theory},
+vol. 23,
+no. 3,
+pp. 337--343,
+1977.
+
+\bibitem{rissanen1979}
+J. Rissanen y G. G. Langdon,
+``Codificación Aritmética,''
+\emph{IBM Journal of Research and Development},
+vol. 23,
+no. 2,
+pp. 149--162,
+1979.
+
+\bibitem{duda2013}
+J. Duda,
+``Sistemas Numéricos Asimétricos: Codificación Entrópica que Combina
+Velocidad de Huffman con Compresión de Codificación Aritmética,''
+arXiv:1311.2540,
+2013.
+
+\bibitem{cover1973}
+T. M. Cover,
+``Codificación Enumerativa de Fuente,''
+\emph{IEEE Transactions on Information Theory},
+vol. 19,
+no. 1,
+pp. 73--77,
+1973.
+
+\bibitem{immink2004}
+K. A. S. Immink,
+``Una Encuesta de Técnicas de Codificación Enumerativa,''
+\emph{IEEE Transactions on Information Theory},
+vol. 50,
+no. 10,
+pp. 2276--2285,
+2004.
+
+\bibitem{hardy2008}
+G. H. Hardy y E. M. Wright,
+\emph{Una Introducción a la Teoría de Números},
+6ta ed.,
+Oxford University Press,
+2008.
+
+\bibitem{khinchin1997}
+A. Ya. Khinchin,
+\emph{Fracciones Continuas},
+Dover Publications,
+1997.
+
+\bibitem{cassels1957}
+J. W. S. Cassels,
+\emph{Una Introducción a la Aproximación Diofántica},
+Cambridge University Press,
+1957.
+
+\bibitem{rockett1992}
+A. M. Rockett y P. Sz\"usz,
+\emph{Fracciones Continuas},
+World Scientific,
+1992.
+
+\bibitem{brent2010}
+R. P. Brent y P. Zimmermann,
+\emph{Aritmética Computacional Moderna},
+Cambridge University Press,
+2010.
+
+\end{thebibliography}
+
+\end{document}
