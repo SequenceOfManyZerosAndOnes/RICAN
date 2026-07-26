@@ -1,0 +1,42 @@
+# ================================================================
+# RICAN - Dependencies
+# Version: RJ03 v1.0.0
+# Python 3.11+ required
+# ================================================================
+
+# ================================================================
+# Core Dependencies
+# ================================================================
+
+# RICAN uses only Python standard library modules:
+#   - os
+#   - sys
+#   - time
+#   - pathlib
+#   - argparse
+#   - struct (implicitly via int.to_bytes/from_bytes)
+#
+# No external dependencies are required for compression/decompression.
+
+# ================================================================
+# Development and Testing
+# ================================================================
+
+# pytest >= 7.0.0    # For running the test suite
+# black >= 22.0.0    # For code formatting (optional)
+# mypy >= 0.990      # For type checking (optional)
+
+# ================================================================
+# Benchmarking and Analysis
+# ================================================================
+
+# numpy >= 1.24.0    # For numerical analysis of results
+# matplotlib >= 3.6.0   # For generating figures and plots
+# pandas >= 1.5.0    # For data analysis and table generation
+
+# ================================================================
+# DNA Sequence Processing (optional)
+# ================================================================
+
+# The DNA example files are provided as compressed archives.
+# To work with DNA sequences directly, no additional libraries are required.
