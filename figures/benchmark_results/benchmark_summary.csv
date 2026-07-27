@@ -1,0 +1,4 @@
+Input Size, Blocks, Encoded Size (bytes), Storage Rate (%), Encoding Time (s), Decoding Time (s)
+1,000,508,1556,415474,41.5263,0.24,0.05
+10,000,579,15553,4152651,41.5263,2.35,0.40
+100,000,003,155521,41522107,41.5263,22.8,3.89

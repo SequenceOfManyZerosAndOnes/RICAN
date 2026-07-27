@@ -1,0 +1,28 @@
+{
+  "benchmarks": [
+    {
+      "input_size": 1000508,
+      "blocks": 1556,
+      "encoded_bytes": 415474,
+      "storage_rate": 41.5263,
+      "encoding_time_s": 0.24,
+      "decoding_time_s": 0.05
+    },
+    {
+      "input_size": 10000579,
+      "blocks": 15553,
+      "encoded_bytes": 4152651,
+      "storage_rate": 41.5263,
+      "encoding_time_s": 2.35,
+      "decoding_time_s": 0.40
+    },
+    {
+      "input_size": 100000003,
+      "blocks": 155521,
+      "encoded_bytes": 41522107,
+      "storage_rate": 41.5263,
+      "encoding_time_s": 22.8,
+      "decoding_time_s": 3.89
+    }
+  ]
+}
