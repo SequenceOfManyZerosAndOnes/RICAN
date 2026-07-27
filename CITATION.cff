@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use RICAN in your research, please cite it using the following metadata."
+title: "RICAN: A Fixed-Rate Binary Representation Framework for Finite Alphabets Using Continued-Fraction Convergents"
+authors:
+  - family-names: "Martínez Palomo"
+    given-names: "J. Jesús"
+    email: "enviarcorreoajesusdelaunam@gmail.com"
+    orcid: ""
+version: "RJ03 v1.0.0"
+date-released: 2026-07-26
+doi: ""
+url: "https://github.com/SequenceOfManyZerosAndOnes/RICAN"
+repository-code: "https://github.com/SequenceOfManyZerosAndOnes/RICAN"
+abstract: "RICAN (Representational Isomorphic Coding for Arbitrary Numeration) is a mathematical framework for constructing asymptotically tight fixed-rate reversible binary representations for sequences over arbitrary finite alphabets. The method selects block sizes through continued-fraction approximation of log2(B), producing deterministic fixed-rate representations with rounding gaps converging to zero along suitable subsequences of convergent denominators. The framework applies uniformly to all finite alphabets, including DNA sequences, decimal digits, and byte alphabets."
+keywords:
+  - "fixed-rate representation"
+  - "finite alphabets"
+  - "continued fractions"
+  - "Diophantine approximation"
+  - "enumerative representation"
+  - "bijective coding"
+  - "DNA encoding"
+  - "radix conversion"
+  - "information theory"
+license: "MIT"
+type: "software"
+language:
+  - "en"
+  - "es"
+related-identifiers:
+  - type: "documentation"
+    value: "https://github.com/SequenceOfManyZerosAndOnes/RICAN/tree/main/docs"
+  - type: "reference"
+    value: "https://doi.org/..."
+commit: ""
